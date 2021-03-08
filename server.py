@@ -283,6 +283,6 @@ if __name__ == "__main__":
     from geventwebsocket.handler import WebSocketHandler
 
     app.debug = True
-    http_server = WSGIServer(('', port), app, handler_class=WebSocketHandler)
+    http_server = WSGIServer(('', 17995), app, handler_class=WebSocketHandler)
     http_server.serve_forever()
     socketio.run(app)
