@@ -1,0 +1,57 @@
+body {
+    margin: 0;
+}
+
+#form-area {
+    /* margin-left: auto;
+    margin-right: auto; */
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr;
+    place-items: center;
+}
+#image {
+    width: 340px;
+    height: 400px;
+    background-color: blue;
+    float: left;
+}
+
+input {
+    width: 100%;
+}
+
+#signup h4 {
+    text-align: center;
+    padding: 0;
+    margin: 0;
+}
+#signup-error, #login-error {
+    color: red;
+    height: 20px;
+    margin: 0;
+    padding: 0;
+}
+
+.hidden-panel {
+    display: none;
+}
+#changePasswordMessage {
+    height: 25px;
+}
+
+@media only screen and (max-width: 1000px) {
+    #form-area {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr auto auto;
+        place-items: center;
+        align-items: start;
+        width: 100%;
+    }
+    #login {
+        width: 100%;
+    }
+    #signup {
+        width: 100%;
+    }
+  }
