@@ -10,6 +10,15 @@ from flask_socketio import SocketIO, send, emit,join_room, leave_room
 
 app = Flask(__name__, static_url_path='/static')
 
+import os
+ON_HEROKU = os.environ.get('ON_HEROKU')
+
+if ON_HEROKU:
+    # get the heroku port
+    port = 17995  # as per OP comments default is 17995
+else:
+    port = 5001
+
 # sockets = Sockets(app)
 socketio = SocketIO(app)
 
@@ -274,6 +283,6 @@ if __name__ == "__main__":
     from geventwebsocket.handler import WebSocketHandler
 
     app.debug = True
-    http_server = WSGIServer(('', 5001), app, handler_class=WebSocketHandler)
+    http_server = WSGIServer(('', port), app, handler_class=WebSocketHandler)
     http_server.serve_forever()
     socketio.run(app)
