@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="/static/css/client.css" type="text/css">
+        <link rel="shortcut icon" href="/static/img/wimage.png" type="image/x-icon">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" 
+            integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+        <script
+			  src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+			  integrity="sha256-4+XzXVhsDmqanXGHaHvgh1gMQKX40OUvDEBTu8JcmNs="
+			  crossorigin="anonymous"></script>
+
+              <script src="https://cdn.socket.io/3.1.1/socket.io.min.js" integrity="sha384-gDaozqUvc4HTgo8iZjwth73C6dDDeOJsAgpxBcMpZYztUfjHXpzrpdrHRdVp8ySO" crossorigin="anonymous"></script>        
+              <script src="/static/js/client.js"></script>
+              <script src="https://unpkg.com/page/page.js"></script>
+        <meta charset="UTF-8">
+        <title>Lab 1</title>
+        <!-- VIEWS -->
+        <script type="text/view" id="welcomeview">
+            <div class=" container   align-self-center">
+                <div class="row row-cols-2" id="form-area">
+                    <div class="w-60 col-4" id="image" >
+                        <img src="/static/img/wimage.png" alt="">
+                    </div>
+                    <div class="w-40 col-4">
+                        <div class="col align-self-start" id="login">
+                            <form onsubmit="logInValidation(this); return false;">
+                                <p id="login-error"></p>
+                                <div>
+                                    <label for="loginemail">Email</label>
+                                    <input type="email" name="loginemail" id="loginemail" autocomplete required>
+                                </div>
+            
+                                <div>
+                                    <label for="loginpassword">Password</label>
+                                    <input type="password" name="loginpassword" id="loginpassword" autocomplete required>
+                                </div>
+                                <input type="submit" value="Login">
+                            </form>
+                        </div>
+                        <div class="col align-self-end" id="signup">
+                            <h4>Sign up here</h4>
+                            <form onsubmit="signUpValidation(this); return false;">
+                                <p id="signup-error"></p>
+                                <div>
+                                    <label for="email">Email</label>
+                                    <input type="email" name="email" id="email" required>
+                                </div>
+                                <div>
+                                    <label for="password">Password</label>
+                                    <input type="password" name="password" id="password" autocomplete required>
+                                </div>
+            
+                                <div>
+                                    <label for="password2">Password again</label>
+                                    <input type="password" name="password2" id="password2" autocomplete required>
+                                </div>
+                                <div>
+                                    <label for="firstname">First name</label>
+                                    <input type="text" name="firstname" id="firstname" required>
+                                </div>
+            
+                                <div>
+                                    <label for="familyname">Family name</label>
+                                    <input type="text" name="familyname" id="familyname" required>
+                                </div>
+            
+                                <div>
+                                    <label for="gender">Gender</label>
+                                    <select name="gender" id="gender" required>
+                                        <option value="male">Male</option>
+                                        <option value="female">Female</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+            
+                                <div>
+                                    <label for="city">City</label>
+                                    <input type="text" name="city" id="city" required>
+                                </div>
+            
+                                <div>
+                                    <label for="country">Country</label>
+                                    <input type="text" name="country" id="country" required>
+                                </div>
+                                <input type="submit" value="Signup">               
+                            </form>
+                        </div>    
+                    </div>
+                </div>
+            </div>
+        </script>
+        <script type="text/view" id="profileview">
+            <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                <div class="container-fluid">
+                  <a class="navbar-brand" href="#">Navbar</a>
+                  <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                  </button>
+                  <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <li class="navbar-nav" id="home-tab"><a class="nav-link active" href="/">Home</a></li>
+                        <li class="navbar-nav" id="browse-tab"><a class="nav-link active" href="/browse"></a>Browse</li>
+                        <li class="navbar-nav" id="profile-tab"><a class="nav-link active" href="/profile"></a>Profile</li>
+                    </ul>
+                  </div>
+                </div>
+              </nav>
+            <div class="">
+                <div id="panels" class="container mt-3">
+                    <div class="hidden-panel panel" id="home-panel">
+                        <h1>Home</h1>
+                        <div>
+                            <p>Name: <span id="homeName"></span></p>
+                            <p>Family name: <span id="homeFamily"></span></p>
+                            <p>Email: <span id="homeEmail"></span></p>
+                            <p>City: <span id="homeCity"></span></p>
+                            <p>Gender: <span id="homeGender"></span></p>
+                            <p>Country: <span id="homeCountry"></span></p>
+                        </div>
+                        <form onsubmit="postMessage(this); return false;" >
+                            <label for="message">Message text</label>
+                            <textarea name="message" class="form-control" id="message" cols="30" rows="10"></textarea>
+                            <input class="btn btn-primary mt-2" type="submit" value="Post message">
+                        </form>
+                        <h4>Messages</h4>
+                        <div id="homeMessages">
+                        </div>
+
+                        <button class= "btn btn-danger my-2" onclick="refreshPage()">Refresh page</button>
+                    
+                    </div>
+                    <div class="hidden-panel panel" id="browse-panel">
+                        <h1>Browse</h1>
+                        <p id="noUserFoundError"></p>
+                        <form>
+                            <label for="email">Serach user wall</label>
+                            <input class="form-control" type="email" name="email" id="email">
+                            <button class="btn btn-info my-2" onclick="displayUserWall(this.form.email.value)" type="button">Show user wall</button>
+                        </form>
+                        <div id="browseInformation">
+                            <p>Name: <span id="browseName"></span></p>
+                            <p>Family name: <span id="browseFamily"></span></p>
+                            <p>Email: <span id="browseEmail"></span></p>
+                            <p>City: <span id="browseCity"></span></p>
+                            <p>Gender: <span id="browseGender"></span></p>
+                            <p>Country: <span id="browseCountry"></span></p>
+                        </div>
+                        <form onsubmit="postMessage(this); return false;" id="postMessageForm">
+                            <label for="message">Message text</label>
+                            <textarea class="form-control" name="message" id="message" cols="30" rows="10"></textarea>
+                            <input class="btn btn-success my-2" type="submit" value="Post message">
+                        </form>
+                        <div id="browseMessages">
+
+                        </div>
+                        <div id="homeMessages">
+
+                        </div>
+                        <button class="btn btn-danger my-2" onclick="refreshPage()">Refresh page</button>
+
+                    </div>
+                    <div class="hidden-panel panel" id="profile-panel">
+                        <h1>Profile</h1>
+                        <h4>Log out</h4>
+                        <button class="btn btn-danger my-2" onclick="signOutValidation()">Log out</button>
+                        <h4 class="my-4">Change password</h4>
+                        <form onsubmit="changePasswordValidation(this); return false;">
+                            <div>
+                                <label class="form-label" for="oldpassword">Old password</label>
+                                <input class="form-control" type="password" name="oldpassword" id="oldpassword">
+                            </div>
+                            <div>
+                                <label class="form-label" for="password">New password</label>
+                                <input class="form-control" type="password" name="password" id="password">
+                            </div>
+                            <div>
+                                <label class="form-label" for="password2">New password again</label>
+                                <input class="form-control" type="password" name="password2" id="password2">
+                            </div>
+                            <input class="btn btn-warning my-2" type="submit" value="Change password">
+                        </form>
+                        <p id="changePasswordMessage"></p>
+                    </div>
+                </div>
+            </div>
+        </script>
+    </head>
+    <body>
+        <script src="https://cdn.socket.io/3.1.1/socket.io.min.js" integrity="sha384-gDaozqUvc4HTgo8iZjwth73C6dDDeOJsAgpxBcMpZYztUfjHXpzrpdrHRdVp8ySO" crossorigin="anonymous"></script>
+
+        <script>
+            var socket = io();
+            
+            socket.on('logout', function() {
+                console.log("log out");
+                forceLogout()
+            });
+
+            socket.on('connect', () => {
+                console.log("Current socket id: ", socket.id);
+                socket.emit('message', {data: "Connected..."})
+            })
+
+            socket.on('reconnect', () => {
+                socket.emit('subscribe', getLoggedInUserTokenEmail().token)
+            })
+            
+           
+            page('/', function(){
+                console.log('home')
+                switchTab('home-panel')
+            });
+            page('/profile', function(){
+                console.log('profile')
+                switchTab('profile-panel')
+            });
+            page('/browse', function(){
+                console.log('browse')
+                switchTab('browse-panel')
+            });
+
+            page();
+
+        </script>
+
+        <div id="dynamic-content">
+            <!-- PLACE CONTENT HERE -->
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js" 
+            integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0" crossorigin="anonymous">
+        </script>
+
+    </body>
+</html>
