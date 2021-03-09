@@ -1,8 +1,36 @@
+var currentPanel = 'home'
+var browseUser = ''
+
+function displayViewNew(view_name) {
+    var view, dynamicContent
+
+    view = document.getElementById('profileview')
+    dynamicContent = document.getElementById('dynamic-content')
+    dynamicContent.innerHTML = view.innerHTML;
+
+    if (view_name == 'login') {
+        view = document.getElementById('welcomeview')
+        dynamicContent = document.getElementById('dynamic-content')
+        dynamicContent.innerHTML = view.innerHTML;
+    } else if (view_name == 'home') {
+        switchTab('home-panel')
+    } else if (view_name == 'browse') {
+        switchTab('browse-panel')
+    } else if (view_name == 'profile') {
+        switchTab('profile-panel')
+    }
+}
+
 // get user token and email from logged in user
 function getLoggedInUserTokenEmail() {
     var currentUser = JSON.parse(localStorage.getItem("currentUser"));
-    if(currentUser === undefined) {
-        displayView('welcomeview')
+
+    if(currentUser == null) {
+        page('/login')
+        return {
+            token: "",
+            email: ""
+        }
     }
 
     // return object
@@ -12,26 +40,18 @@ function getLoggedInUserTokenEmail() {
     }
 }
 
-// Global variables for keeping track
-var browseUser;
-var currentPanel = "home"
+function allowDrop(ev) {
+    ev.preventDefault();
+}
 
-// Display a view
-displayView = function (viewName) {
-    var view = document.getElementById(viewName)
-    var dynamicContent = document.getElementById('dynamic-content')
-    dynamicContent.innerHTML = view.innerHTML;
+function drag(ev) {
+    ev.dataTransfer.setData("text/plain", ev.target.id);
+}
 
-    //If the view is profile, set default panel
-    if (viewName == 'profileview') {
-        if (currentPanel == 'browse') { // needed for refresh 
-            switchTab('browse-panel')
-            displayUserWall(browseUser)
-        } else { // needed for refresh 
-            switchTab('home-panel')
-            displayUserWall(getLoggedInUserTokenEmail().email)
-        }
-    }
+function drop(ev) {
+    ev.preventDefault();
+    var data = ev.dataTransfer.getData("text");
+    ev.target.value = document.getElementById(data).innerHTML;
 }
 
 // used in home and browse to show user content
@@ -40,10 +60,10 @@ function displayUserWall(email) {
     var token = getLoggedInUserTokenEmail().token
 
     if(currentPanel == 'browse'){
-    console.log(browseUser)
-        browseUser = email}
+        browseUser = email
+    }
     
-    if (email !== undefined && email.length > 0) {
+    if (email !== undefined && email.length > 0 && token.length > 0) {
         var xhr = new XMLHttpRequest();
         var json = {
             email: email
@@ -56,7 +76,7 @@ function displayUserWall(email) {
         xhr.onload = function (e) {
             // if the user exists
             if (xhr.status == 200) {
-                userData = JSON.parse(xhr.responseText)
+                let userData = JSON.parse(xhr.responseText)
                 document.getElementById('noUserFoundError').innerHTML = ""
                 document.getElementById('postMessageForm').style.display = "block"
                 document.getElementById("browseInformation").style.display = "block"
@@ -68,27 +88,31 @@ function displayUserWall(email) {
                 document.getElementById(currentPanel + 'Country').innerHTML = userData.country
 
                 xhr = new XMLHttpRequest();
-                var json = {
+                var json2 = {
                     email: email
                 }
                 xhr.open('POST', '/api/get-messages-by-email', true);
                 xhr.setRequestHeader("Authorization", token)
                 xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
-                xhr.send(JSON.stringify(json));
+                xhr.send(JSON.stringify(json2));
 
-                xhr.onload = function (e) {
+                var messages;
+                xhr.onload = function () {
                     // if we got messages back
                     if (xhr.status == 200) {
-                        returnData = JSON.parse(xhr.responseText)
+                        let returnData = JSON.parse(xhr.responseText)
                         if (returnData.length > 0) {
-                            var messages = document.getElementById(currentPanel + 'Messages')
+                            messages = document.getElementById(currentPanel + 'Messages')
 
                             // clear messages on wall
                             messages.innerHTML = ""
 
                             // go through all messages for the user
-                            returnData.forEach(message => {
+                            returnData.forEach((message,i) => {
                                 var p = document.createElement("p");
+                                p.id = i
+                                p.draggable = "true"
+                                p.addEventListener('dragstart', drag);
                                 p.innerText = message.message;
                                 messages.appendChild(p);
 
@@ -99,14 +123,14 @@ function displayUserWall(email) {
                             });
                         }
                     } else {
-                        var messages = document.getElementById(currentPanel + 'Messages')
+                        messages = document.getElementById(currentPanel + 'Messages')
                         messages.innerHTML = "No messages"
                     }
                 }
 
             } else if (xhr.status == 500) {
                 document.getElementById('postMessageForm').style.display = "none"
-                var messages = document.getElementById(currentPanel + 'Messages')
+                messages = document.getElementById(currentPanel + 'Messages')
                 messages.innerHTML = ""
                 document.getElementById(currentPanel + 'Name').innerHTML = ""
                 document.getElementById(currentPanel + 'Family').innerHTML = ""
@@ -117,38 +141,9 @@ function displayUserWall(email) {
                 document.getElementById("browseInformation").style.display = "none"
                 document.getElementById('noUserFoundError').innerHTML = "No user found with that email"
             } else {
-                console.log("Error")
-            }
-
-        }
-    }
-}
-
-// do this when the page loads
-window.onload = function () {
-    // If the user is logged in -> profile view. If not -> welcome view
-    if (localStorage.getItem("currentUser") === null) {
-        // redirect to the welcome screen
-        displayView('welcomeview')
-    } else {
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', '/api/user-by-email', true);
-        xhr.setRequestHeader("Authorization", getLoggedInUserTokenEmail().token)
-        xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
-        xhr.send(JSON.stringify({email: getLoggedInUserTokenEmail().email}));
-
-        xhr.onload = function (e) {
-            if(xhr.status != 200) {
                 forceLogout()
-            } else {
-                
-                // socket.on("disconnect", () => {
-                //     console.log("Server seems to be offline..."); // undefined
-                //     forceLogout()
-                // });
-                
-                displayView('profileview')
             }
+
         }
     }
 }
@@ -156,7 +151,9 @@ window.onload = function () {
 function forceLogout() {
     socket.close()
     localStorage.removeItem('currentUser');
-    displayView('welcomeview')
+    
+    page('/login')
+
     currentPanel = 'home'
     browseUser = ''
 }
@@ -187,14 +184,11 @@ function logInValidation(form) {
 
                 socket.open()
                 socket.emit('login', {"data": xhr.getResponseHeader("Authorization")});
-
-                displayView('profileview')
+                page('/')
             } else {
                 document.getElementById('login-error').innerHTML = "Wrong email or password"
             }
         }
-
-
     } else {
         document.getElementById('login-error').innerHTML = "Passwords too short"
     }
@@ -222,9 +216,6 @@ function signUpValidation(form) {
                 city: city,
                 country: country
             }
-
-            // sign up the user (does not log the user in)
-            //var data = serverstub.signUp(user)
 
             var xhr = new XMLHttpRequest();
             const json = user
@@ -286,7 +277,6 @@ function changePasswordValidation(form) {
     } else {
         document.getElementById("changePasswordMessage").innerHTML = "Password too short"
     }
-
 }
 
 // switching panel based on tab click
@@ -304,19 +294,18 @@ function switchTab(id) {
 
     currentPanel = id.split("-")[0] // string split: home-tab -> home
 
-    // Show clicked panel
-    if (currentPanel == 'home') {
-        displayUserWall(getLoggedInUserTokenEmail().email)
-    } else {
-        displayUserWall(browseUser)
-    }
-
     // make selected tab text bold
     document.getElementById(currentPanel + "-tab").style.fontWeight = "bold"
 
     // un-hide the selected panel
     document.getElementById(id).classList.remove('hidden-panel')
 
+    // Show clicked panel
+    if (currentPanel == 'home') {
+        displayUserWall(getLoggedInUserTokenEmail().email)
+    } else {
+        displayUserWall(browseUser)
+    }
 }
 
 // getting token from local storage and logging the user out
@@ -331,16 +320,14 @@ function signOutValidation() {
 
     xhr.onload = function (e) {
         if (xhr.status == 204) {
-            
             socket.close()
-
             localStorage.removeItem('currentUser');
-            displayView('welcomeview')
+            page('/login')
             
             currentPanel = 'home'
             browseUser = ''
         } else {
-            // log out did not work
+            forceLogout()
         }
     }
 }
@@ -371,7 +358,6 @@ function postMessage(form) {
             if (xhr.status == 201) {
                 refreshPage()
             } else if(xhr.status == 500) {
-                console.log("Server error")
                 forceLogout()
             }
         }
@@ -379,10 +365,5 @@ function postMessage(form) {
 }
 
 function refreshPage() {
-    displayView('profileview')
+    page()
 }
-
-// Questions
-
-// why does log out need token? 
-// what error messages should we give for "failed" posted messages ? 
