@@ -18,7 +18,7 @@ if ON_HEROKU:
     port = 17995  # as per OP comments default is 17995
 else:
     port = 5001
-    
+
 # sockets = Sockets(app)
 socketio = SocketIO(app)
 
@@ -58,15 +58,8 @@ def root():
     response = make_response(render_template('index.html'))
     return response
 
-@app.route("/welcome", methods=["GET"])
-def welcome():
-    response = app.response_class(
-        status=200
-    )
-    return response
-
-@app.route("/home", methods=["GET"])
-def home():
+@app.route("/login", methods=["GET"])
+def login():
     response = make_response(render_template('index.html'))
     return response
 
